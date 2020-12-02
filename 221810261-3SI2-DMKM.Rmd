@@ -1,0 +1,91 @@
+---
+title: "UTS DMKM"
+author: "ELISA IMANIA"
+date: "10/27/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(party)
+library(psych)
+library(caret)
+library(RWeka)
+library(partykit)
+
+```
+
+
+# Import Dataset
+
+mengimport data dan menghilangkan missing value serta mengkonversi beberapa variabel
+
+```{r, message=FALSE, warning=FALSE}
+data <- readr::read_csv("C:/Users/WINDOWS 10/Downloads/credit.csv")
+## Menghilangkan missing value
+data <-na.omit(data)
+#Mengkonversi data
+data$A2 <-as.numeric(data$A2)
+data$beriKredit <- ifelse(data$beriKredit==TRUE,"ya","tidak")
+data$beriKredit <- as.factor(data$beriKredit)
+data$A1 <- as.factor(data$A1)
+data$A4 <- as.factor(data$A4)
+data$A5 <- as.factor(data$A5)
+data$A6 <- as.factor(data$A6)
+data$A7 <- as.factor(data$A7)
+data$A11 <- as.factor(data$A11)
+data
+
+```
+
+
+# Split dataset
+
+Memecah data menjadi data training (80% dari data awal) dan data test (20% dari data awal)
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(1234)
+sampel <- sample(2,nrow(data),replace = T, prob = c(0.8,0.2))
+trainingdat <- data[sampel==1, ]
+testingdat <- data[sampel==2, ]
+print(paste("Jumlah train data :", nrow(trainingdat)))
+print(paste("Jumlah test data :", nrow(testingdat)))
+```
+
+
+
+# Membuat Model
+
+Membuat model dengan menggunakan algoritma C4.5
+
+```{r, message=FALSE, warning=FALSE}
+model <- J48(beriKredit~.,data = trainingdat)
+model
+```
+
+
+# Model Evaluation
+
+
+```{r, message=FALSE, warning=FALSE}
+prediksi <- predict(model, testingdat)
+confusionMatrix(table(prediksi,testingdat$beriKredit))
+```
+
+
++ Berdasarkan confusion matrix di atas diperoleh bahwa, sebanyak 52 orang diklasifikasikan dengan tepat sebagai orang yang "tidak" berhak menerima pemberian kredit (TN) dan 29 orang diklasifikasikan dengan tepat sebagai orang yang berhak menerima pemberian kredit (TP). Namun, terdapat sebanyak 26 orang yang seharusnya tidak berhak menerima pemberian kredit diklasifikasikan sebagai orang yang berhak menerima keputusan pemberian kredit (FP) serta sebaliknya sebanyak 39 orang yang seharusnya berhak menerima pemberian kredit diklasifikasikan sebgai orang yang tidak bisa menerima pemberian kredit (FN).
+
++ Akurasi dari model di atas adalah sebesar 0.5548, artinya sebanyak 55.48% data terklasifikasi dengan benar.
+
++ No information rate, adalah proporsi terbesar dari kategori-kategori dalam kelas target. Pada model tersebut NIR sebesar 53.42%
+
++ specificity prediksi 0.4265. Dari 78 kelompok yang tidak menerima pemberian kredit, 52  diantaranya berhasil diprediksi dengan benar oleh model
+
++ sensitivitas sebesar 0.6667. Artinya dari 68 kelompok yang menerima pemberian kredit, sebesar 29 diprediksi dengan benar oleh model.
+
++ Precission sebesar 0.527. dari 100 prediksi positif, 53 diantaranya berhasil diprediksi dengan benar oleh model
+
